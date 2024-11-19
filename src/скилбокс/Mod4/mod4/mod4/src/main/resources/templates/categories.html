@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Категории</title>
+    <style>
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        button { cursor: pointer; }
+    </style>
+</head>
+<body>
+<h1>Категории</h1>
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Название категории</th>
+        <th>Действия</th>
+    </tr>
+    </thead>
+    <tbody id="categoryTableBody">
+    </tbody>
+</table>
+
+<h2>Создать категорию</h2>
+<form id="createCategoryForm">
+    <input type="text" id="categoryName" placeholder="Название категории" required>
+    <button type="submit">Создать</button>
+</form>
+
+<script>
+    // Функция для получения всех категорий
+    function fetchCategories() {
+        fetch('/api/categories')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('categoryTableBody');
+                tbody.innerHTML = ''; // Очищаем текущее содержимое
+                data.forEach(category => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                            <td>${category.id}</td>
+                            <td>${category.name}</td>
+                            <td>
+                                <button onclick="deleteCategory(${category.id})">Удалить</button>
+                            </td>
+                        `;
+                    tbody.appendChild(tr);
+                });
+            });
+    }
+
+    // Функция для создания новой категории
+    document.getElementById('createCategoryForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const categoryName = document.getElementById('categoryName').value;
+        fetch('/api/categories', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name: categoryName })
+        })
+            .then(() => {
+                fetchCategories(); // Обновить список категорий
+                document.getElementById('createCategoryForm').reset(); // Сбросить форму
+            });
+    });
+
+    // Функция для удаления категории
+    function deleteCategory(id) {
+        fetch(`/api/categories/${id}`, { method: 'DELETE' })
+            .then(() => fetchCategories()); // Обновить список категорий
+    }
+
+    // Первоначальная загрузка категорий
+    fetchCategories();
+</script>
+</body>
+</html>

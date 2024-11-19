@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пользователи</title>
+    <style>
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        button { cursor: pointer; }
+    </style>
+</head>
+<body>
+<h1>Пользователи</h1>
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Имя пользователя</th>
+        <th>Действия</th>
+    </tr>
+    </thead>
+    <tbody id="userTableBody">
+    <!-- Динамически заполняется с помощью JavaScript -->
+    </tbody>
+</table>
+
+<h2>Создать пользователя</h2>
+<form id="createUserForm">
+    <input type="text" id="username" placeholder="Имя пользователя" required>
+    <button type="submit">Создать</button>
+</form>
+
+<script>
+    // Функция для получения всех пользователей
+    function fetchUsers() {
+        fetch('/api/users')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('userTableBody');
+                tbody.innerHTML = ''; // Очищаем текущее содержимое
+                data.forEach(user => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                            <td>${user.id}</td>
+                            <td>${user.username}</td>
+                            <td>
+                                <button onclick="deleteUser(${user.id})">Удалить</button>
+                            </td>
+                        `;
+                    tbody.appendChild(tr);
+                });
+            });
+    }
+
+    // Функция для создания нового пользователя
+    document.getElementById('createUserForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const username = document.getElementById('username').value;
+        fetch('/api/users', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username: username })
+        })
+            .then(() => {
+                fetchUsers(); // Обновить список пользователей
+                document.getElementById('createUserForm').reset(); // Сбросить форму
+            });
+    });
+
+    // Функция для удаления пользователя
+    function deleteUser(id) {
+        fetch(`/api/users/${id}`, { method: 'DELETE' })
+            .then(() => fetchUsers()); // Обновить список пользователей
+    }
+
+    // Первоначальная загрузка пользователей
+    fetchUsers();
+</script>
+</body>
+</html>

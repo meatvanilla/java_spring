@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Новости</title>
+    <style>
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        button { cursor: pointer; }
+    </style>
+</head>
+<body>
+<h1>Новости</h1>
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Заголовок</th>
+        <th>Содержимое</th>
+        <th>Действия</th>
+    </tr>
+    </thead>
+    <tbody id="newsTableBody">
+    <!-- Динамически заполняется с помощью JavaScript -->
+    </tbody>
+</table>
+
+<h2>Создать новость</h2>
+<form id="createNewsForm">
+    <input type="text" id="newsTitle" placeholder="Заголовок" required>
+    <textarea id="newsContent" placeholder="Содержимое" required></textarea>
+    <button type="submit">Создать</button>
+</form>
+
+<script>
+    // Функция для получения всех новостей
+    function fetchNews() {
+        fetch('/api/news')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('newsTableBody');
+                tbody.innerHTML = ''; // Очищаем текущее содержимое
+                data.forEach(news => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                            <td>${news.id}</td>
+                            <td>${news.title}</td>
+                            <td>${news.content}</td>
+                            <td>
+                                <button onclick="deleteNews(${news.id})">Удалить</button>
+                            </td>
+                        `;
+                    tbody.appendChild(tr);
+                });
+            });
+    }
+
+    // Функция для создания новой новости
+    document.getElementById('createNewsForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const newsTitle = document.getElementById('newsTitle').value;
+        const newsContent = document.getElementById('newsContent').value;
+        fetch('/api/news', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ title: newsTitle, content: newsContent })
+        })
+            .then(() => {
+                fetchNews(); // Обновить список новостей
+                document.getElementById('createNewsForm').reset(); // Сбросить форму
+            });
+    });
+
+    // Функция для удаления новости
+    function deleteNews(id) {
+        fetch(`/api/news/${id}`, { method: 'DELETE' })
+            .then(() => fetchNews()); // Обновить список новостей
+    }
+
+    // Первоначальная загрузка новостей
+    fetchNews();
+</script>
+</body>
+</html>
